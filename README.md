@@ -32,17 +32,20 @@
 
 ## 🚀 Download
 
-### APK Releases
+### 📥 APK Releases
 
-Baixe a versão mais recente para Android:
+[![Latest Release](https://img.shields.io/github/v/release/MrRafha/Hello-Kitty-Drink-Wather?style=for-the-badge&color=pink)](https://github.com/MrRafha/Hello-Kitty-Drink-Wather/releases/latest)
 
-- **ARM64 (Recomendado)** - 20.8 MB
-  - Para dispositivos Android modernos (2018+)
-  
-- **Universal** - 51.8 MB  
-  - Compatível com todos os dispositivos Android
+**Baixe a versão v1.1.0 para Android:**
 
-*[📥 Downloads disponíveis nas Releases](https://github.com/MrRafha/Hello-Kitty-Drink-Wather/releases)*
+| Versão | Tamanho | Compatibilidade | Download |
+|--------|---------|-----------------|----------|
+| **ARM64** ⭐ | 20.8 MB | Android 2018+ | [📱 Baixar](https://github.com/MrRafha/Hello-Kitty-Drink-Wather/releases/download/v1.1.0/HelloKitty_WaterReminder_v1.1.0_ARM64.apk) |
+| **Universal** | 51.8 MB | Android 5.0+ | [📱 Baixar](https://github.com/MrRafha/Hello-Kitty-Drink-Wather/releases/download/v1.1.0/HelloKitty_WaterReminder_v1.1.0_release.apk) |
+
+*💡 Recomendamos a versão ARM64 para dispositivos modernos (menor tamanho, melhor performance)*
+
+**[� Ver todas as releases e changelog](https://github.com/MrRafha/Hello-Kitty-Drink-Wather/releases)**
 
 ## 🛠️ Tecnologias
 
