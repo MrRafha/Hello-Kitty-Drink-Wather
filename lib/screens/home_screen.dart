@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/water_models.dart';
@@ -6,6 +7,7 @@ import '../services/notification_service.dart';
 import '../widgets/water_counter_widget.dart';
 import '../widgets/progress_indicator_widget.dart';
 import '../widgets/water_reminder_countdown.dart';
+import '../widgets/streak_widget.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -23,6 +25,8 @@ class _HomeScreenState extends State<HomeScreen>
   int _currentGlasses = 0;
   int _dailyGoal = 8;
   UserProfile? _userProfile;
+  HydrationStreak _hydrationStreak = HydrationStreak();
+  DateTime? _lastCheckedDate;
   
   late AnimationController _pulseController;
   late AnimationController _celebrationController;
@@ -34,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen>
     super.initState();
     _setupAnimations();
     _loadData();
+    _startPeriodicStreakCheck();
   }
 
   void _setupAnimations() {
@@ -66,6 +71,40 @@ class _HomeScreenState extends State<HomeScreen>
     _pulseController.repeat(reverse: true);
   }
 
+  void _startPeriodicStreakCheck() {
+    // Verificar o streak a cada 30 segundos para detectar mudança de dia
+    Timer.periodic(const Duration(seconds: 30), (timer) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      
+      // Se o dia mudou, verificar o streak do dia anterior
+      if (_lastCheckedDate != null && _lastCheckedDate!.isBefore(today)) {
+        _checkStreakForPreviousDay();
+      }
+      
+      _lastCheckedDate = today;
+    });
+    
+    // Definir a data inicial
+    final now = DateTime.now();
+    _lastCheckedDate = DateTime(now.year, now.month, now.day);
+  }
+
+  Future<void> _checkStreakForPreviousDay() async {
+    try {
+      // Verificar se o streak foi quebrado ontem
+      await _storageService.checkStreakAtEndOfDay(_currentGlasses, _dailyGoal);
+      
+      // Recarregar dados atualizados
+      final updatedStreak = await _storageService.getHydrationStreak();
+      setState(() {
+        _hydrationStreak = updatedStreak;
+      });
+    } catch (e) {
+      print('Erro ao verificar streak do dia anterior: $e');
+    }
+  }
+
   @override
   void dispose() {
     _pulseController.dispose();
@@ -78,11 +117,16 @@ class _HomeScreenState extends State<HomeScreen>
       final todayIntake = await _storageService.getTodayIntake();
       final profile = await _storageService.getUserProfile() ?? 
           _storageService.getDefaultProfile();
+      
+      // Verificar e atualizar streak diariamente
+      await _storageService.checkAndUpdateStreakDaily();
+      final streak = await _storageService.getHydrationStreak();
 
       setState(() {
         _currentGlasses = todayIntake;
         _dailyGoal = profile.dailyGoal.glasses;
         _userProfile = profile;
+        _hydrationStreak = streak;
       });
     } catch (e) {
       print('Erro ao carregar dados: $e');
@@ -111,6 +155,8 @@ class _HomeScreenState extends State<HomeScreen>
       // Se atingiu a meta pela primeira vez hoje
       if (oldGlasses < _dailyGoal && _currentGlasses >= _dailyGoal) {
         _celebrateGoalAchieved();
+        // Atualizar streak
+        await _updateStreakForGoal();
       }
       
     } catch (e) {
@@ -125,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen>
     
     HapticFeedback.mediumImpact();
     _notificationService.showInstantReminder(
-      '🎉 Parabéns! Você atingiu sua meta diária! A Hello Kitty está orgulhosa! 💖',
+      '🎉 Parabéns! Você atingiu sua meta diária! A Kitty está orgulhosa! 💖',
     );
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -156,7 +202,77 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  Future<void> _updateStreakForGoal() async {
+    try {
+      await _storageService.updateStreakForGoalAchieved(_currentGlasses, _dailyGoal);
+      
+      // Recarregar o streak atualizado
+      final updatedStreak = await _storageService.getHydrationStreak();
+      
+      setState(() {
+        _hydrationStreak = updatedStreak;
+      });
+      
+      // Mostrar celebração de streak se for significativo
+      if (updatedStreak.currentStreak >= 3) {
+        _showStreakCelebration(updatedStreak);
+      }
+    } catch (e) {
+      print('Erro ao atualizar streak: $e');
+    }
+  }
 
+  void _showStreakCelebration(HydrationStreak streak) {
+    final isNewRecord = streak.currentStreak == streak.longestStreak && streak.currentStreak > 1;
+    
+    showDialog(
+      context: context,
+      builder: (context) => StreakCelebrationDialog(
+        newStreak: streak.currentStreak,
+        longestStreak: streak.longestStreak,
+        isNewRecord: isNewRecord,
+      ),
+    );
+  }
+
+  void _showStreakInfo() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          '🔥 Sua Sequência de Hidratação',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('🎯 Sequência atual: ${_hydrationStreak.currentStreak} dias'),
+            const SizedBox(height: 8),
+            Text('🏆 Melhor sequência: ${_hydrationStreak.longestStreak} dias'),
+            const SizedBox(height: 16),
+            Text(
+              _hydrationStreak.currentStreak == 0
+                ? 'Atinja sua meta diária para começar uma nova sequência! 💪'
+                : 'Continue bebendo água todos os dias para manter sua sequência! 🎀',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Entendi! 💖'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -260,23 +376,11 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ],
         ),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.primary.withOpacity(0.2),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Icon(
-            Icons.favorite,
-            color: theme.colorScheme.primary,
-            size: 28,
+        StreakTooltip(
+          streak: _hydrationStreak,
+          child: StreakWidget(
+            streak: _hydrationStreak,
+            onTap: _showStreakInfo,
           ),
         ),
       ],

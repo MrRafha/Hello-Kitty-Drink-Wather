@@ -190,18 +190,133 @@ class NotificationSettings {
   }
 }
 
+class HydrationStreak {
+  final int currentStreak;
+  final int longestStreak;
+  final DateTime? lastCompletedDate;
+  final List<String> completedDates; // ISO strings das datas que atingiu a meta
+
+  HydrationStreak({
+    this.currentStreak = 0,
+    this.longestStreak = 0,
+    this.lastCompletedDate,
+    this.completedDates = const [],
+  });
+
+  factory HydrationStreak.fromJson(Map<String, dynamic> json) {
+    return HydrationStreak(
+      currentStreak: json['currentStreak'] as int? ?? 0,
+      longestStreak: json['longestStreak'] as int? ?? 0,
+      lastCompletedDate: json['lastCompletedDate'] != null 
+        ? DateTime.parse(json['lastCompletedDate'] as String)
+        : null,
+      completedDates: List<String>.from(json['completedDates'] as List? ?? []),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'currentStreak': currentStreak,
+      'longestStreak': longestStreak,
+      'lastCompletedDate': lastCompletedDate?.toIso8601String(),
+      'completedDates': completedDates,
+    };
+  }
+
+  HydrationStreak copyWith({
+    int? currentStreak,
+    int? longestStreak,
+    DateTime? lastCompletedDate,
+    List<String>? completedDates,
+  }) {
+    return HydrationStreak(
+      currentStreak: currentStreak ?? this.currentStreak,
+      longestStreak: longestStreak ?? this.longestStreak,
+      lastCompletedDate: lastCompletedDate ?? this.lastCompletedDate,
+      completedDates: completedDates ?? this.completedDates,
+    );
+  }
+
+  /// Atualiza o streak quando uma meta é atingida
+  HydrationStreak updateStreak(DateTime completedDate) {
+    final dateString = _formatDateString(completedDate);
+    
+    // Se já completou hoje, não altera
+    if (completedDates.contains(dateString)) {
+      return this;
+    }
+
+    final newCompletedDates = [...completedDates, dateString];
+    
+    // Verifica se é consecutivo
+    final yesterday = completedDate.subtract(const Duration(days: 1));
+    final yesterdayString = _formatDateString(yesterday);
+    
+    int newCurrentStreak;
+    if (completedDates.contains(yesterdayString) || currentStreak == 0) {
+      newCurrentStreak = currentStreak + 1;
+    } else {
+      newCurrentStreak = 1; // Reinicia streak
+    }
+    
+    final newLongestStreak = newCurrentStreak > longestStreak 
+      ? newCurrentStreak 
+      : longestStreak;
+    
+    return HydrationStreak(
+      currentStreak: newCurrentStreak,
+      longestStreak: newLongestStreak,
+      lastCompletedDate: completedDate,
+      completedDates: newCompletedDates,
+    );
+  }
+
+  /// Verifica e atualiza streak considerando dias perdidos
+  HydrationStreak checkAndUpdateStreak(DateTime today) {
+    if (lastCompletedDate == null) return this;
+    
+    final todayString = _formatDateString(today);
+    final yesterdayString = _formatDateString(today.subtract(const Duration(days: 1)));
+    
+    // Se hoje já foi completado, não faz nada
+    if (completedDates.contains(todayString)) {
+      return this;
+    }
+    
+    final daysSinceLastCompleted = today.difference(lastCompletedDate!).inDays;
+    
+    // Se passou mais de 1 dia sem completar, quebra o streak
+    if (daysSinceLastCompleted > 1) {
+      return copyWith(currentStreak: 0);
+    }
+    
+    // Se é o dia seguinte e ontem não foi completado, quebra o streak
+    if (daysSinceLastCompleted == 1 && !completedDates.contains(yesterdayString)) {
+      return copyWith(currentStreak: 0);
+    }
+    
+    return this;
+  }
+
+  String _formatDateString(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+}
+
 class UserProfile {
   final String name;
   final DailyGoal dailyGoal;
   final NotificationSettings notificationSettings;
   final DateTime createdAt;
+  final HydrationStreak hydrationStreak;
 
   UserProfile({
     required this.name,
     required this.dailyGoal,
     required this.notificationSettings,
     required this.createdAt,
-  });
+    HydrationStreak? hydrationStreak,
+  }) : hydrationStreak = hydrationStreak ?? HydrationStreak();
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
@@ -211,6 +326,9 @@ class UserProfile {
         json['notificationSettings'] as Map<String, dynamic>,
       ),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      hydrationStreak: json['hydrationStreak'] != null 
+        ? HydrationStreak.fromJson(json['hydrationStreak'] as Map<String, dynamic>)
+        : HydrationStreak(),
     );
   }
 
@@ -220,6 +338,7 @@ class UserProfile {
       'dailyGoal': dailyGoal.toJson(),
       'notificationSettings': notificationSettings.toJson(),
       'createdAt': createdAt.toIso8601String(),
+      'hydrationStreak': hydrationStreak.toJson(),
     };
   }
 
@@ -228,12 +347,14 @@ class UserProfile {
     DailyGoal? dailyGoal,
     NotificationSettings? notificationSettings,
     DateTime? createdAt,
+    HydrationStreak? hydrationStreak,
   }) {
     return UserProfile(
       name: name ?? this.name,
       dailyGoal: dailyGoal ?? this.dailyGoal,
       notificationSettings: notificationSettings ?? this.notificationSettings,
       createdAt: createdAt ?? this.createdAt,
+      hydrationStreak: hydrationStreak ?? this.hydrationStreak,
     );
   }
 }

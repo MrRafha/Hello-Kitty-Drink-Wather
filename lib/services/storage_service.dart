@@ -166,6 +166,78 @@ class StorageService {
     return ((daysDifference + firstDayOfYear.weekday) / 7).ceil();
   }
 
+  // Hydration Streak Methods
+  Future<HydrationStreak> getHydrationStreak() async {
+    final profile = await getUserProfile();
+    return profile?.hydrationStreak ?? HydrationStreak();
+  }
+
+  Future<void> updateStreakForGoalAchieved(int currentGlasses, int dailyGoal) async {
+    if (currentGlasses < dailyGoal) return;
+
+    final profile = await getUserProfile();
+    if (profile == null) return;
+
+    final today = DateTime.now();
+    final updatedStreak = profile.hydrationStreak.updateStreak(today);
+    
+    final updatedProfile = profile.copyWith(hydrationStreak: updatedStreak);
+    await saveUserProfile(updatedProfile);
+    
+    print('DEBUG: Streak atualizado - Atual: ${updatedStreak.currentStreak}, Máximo: ${updatedStreak.longestStreak}');
+  }
+
+  Future<void> checkAndUpdateStreakDaily() async {
+    final profile = await getUserProfile();
+    if (profile == null) return;
+
+    final today = DateTime.now();
+    final updatedStreak = profile.hydrationStreak.checkAndUpdateStreak(today);
+    
+    // Se o streak mudou (foi quebrado), salva
+    if (updatedStreak.currentStreak != profile.hydrationStreak.currentStreak) {
+      final updatedProfile = profile.copyWith(hydrationStreak: updatedStreak);
+      await saveUserProfile(updatedProfile);
+      print('DEBUG: Streak verificado e atualizado para: ${updatedStreak.currentStreak}');
+    }
+  }
+
+  Future<void> checkStreakAtEndOfDay(int currentGlasses, int dailyGoal, [DateTime? checkDate]) async {
+    final profile = await getUserProfile();
+    if (profile == null) return;
+
+    final dateToCheck = checkDate ?? DateTime.now().subtract(const Duration(days: 1));
+    final dateString = '${dateToCheck.year}-${dateToCheck.month.toString().padLeft(2, '0')}-${dateToCheck.day.toString().padLeft(2, '0')}';
+    
+    // Verificar se o usuário atingiu a meta na data especificada
+    final dateIntake = await _getIntakeForDate(dateToCheck);
+    
+    // Se não atingiu a meta na data e ainda não está marcado como completado
+    if (dateIntake < dailyGoal && !profile.hydrationStreak.completedDates.contains(dateString)) {
+      // Quebrar o streak se havia um ativo
+      if (profile.hydrationStreak.currentStreak > 0) {
+        final brokenStreak = profile.hydrationStreak.copyWith(currentStreak: 0);
+        final updatedProfile = profile.copyWith(hydrationStreak: brokenStreak);
+        await saveUserProfile(updatedProfile);
+        print('DEBUG: Streak quebrado por não atingir meta em $dateString: ${profile.hydrationStreak.currentStreak} -> 0');
+      }
+    }
+  }
+
+  Future<int> _getIntakeForDate(DateTime date) async {
+    final allIntake = await getWaterIntake();
+    final dateOnly = DateTime(date.year, date.month, date.day);
+    
+    int totalGlasses = 0;
+    for (final intake in allIntake) {
+      if (isSameDay(intake.date, dateOnly)) {
+        totalGlasses += intake.glasses;
+      }
+    }
+    
+    return totalGlasses;
+  }
+
   // Get default user profile
   UserProfile getDefaultProfile() {
     return UserProfile(
@@ -182,6 +254,7 @@ class StorageService {
         customMessages: [],
       ),
       createdAt: DateTime.now(),
+      hydrationStreak: HydrationStreak(),
     );
   }
 }
