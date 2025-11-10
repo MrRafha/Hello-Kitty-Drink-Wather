@@ -30,7 +30,7 @@ class NotificationService {
   Future<void> init() async {
     // Configuração para Android usando o ícone do kitty
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/kitty');
+        AndroidInitializationSettings('@mipmap/hello_kitty_notification');
 
     // Configuração para iOS
     const DarwinInitializationSettings initializationSettingsIOS =
@@ -195,7 +195,7 @@ class NotificationService {
       channelDescription: 'Notificações para lembrar de beber água',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/kitty',
+      icon: '@mipmap/hello_kitty_notification',
       playSound: true,
       enableVibration: true,
       styleInformation: BigTextStyleInformation(''),
@@ -265,7 +265,7 @@ class NotificationService {
       channelDescription: 'Lembrete imediato para beber água',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/kitty',
+      icon: '@mipmap/hello_kitty_notification',
       playSound: true,
       enableVibration: true,
       ticker: 'Lembrete da Hello Kitty',
