@@ -173,18 +173,28 @@ class StorageService {
   }
 
   Future<void> updateStreakForGoalAchieved(int currentGlasses, int dailyGoal) async {
-    if (currentGlasses < dailyGoal) return;
+    print('DEBUG STORAGE: updateStreakForGoalAchieved chamado - Copos: $currentGlasses, Meta: $dailyGoal');
+    
+    if (currentGlasses < dailyGoal) {
+      print('DEBUG STORAGE: Meta não atingida, não atualizando streak');
+      return;
+    }
 
     final profile = await getUserProfile();
-    if (profile == null) return;
+    if (profile == null) {
+      print('DEBUG STORAGE: Perfil não encontrado');
+      return;
+    }
 
+    print('DEBUG STORAGE: Perfil encontrado, streak atual: ${profile.hydrationStreak.currentStreak}');
+    
     final today = DateTime.now();
     final updatedStreak = profile.hydrationStreak.updateStreak(today);
     
     final updatedProfile = profile.copyWith(hydrationStreak: updatedStreak);
     await saveUserProfile(updatedProfile);
     
-    print('DEBUG: Streak atualizado - Atual: ${updatedStreak.currentStreak}, Máximo: ${updatedStreak.longestStreak}');
+    print('DEBUG STORAGE: Streak atualizado e salvo - Atual: ${updatedStreak.currentStreak}, Máximo: ${updatedStreak.longestStreak}');
   }
 
   Future<void> checkAndUpdateStreakDaily() async {

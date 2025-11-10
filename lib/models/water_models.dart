@@ -241,8 +241,13 @@ class HydrationStreak {
   HydrationStreak updateStreak(DateTime completedDate) {
     final dateString = _formatDateString(completedDate);
     
+    print('DEBUG STREAK: Tentando atualizar para data: $dateString');
+    print('DEBUG STREAK: Datas já completadas: $completedDates');
+    print('DEBUG STREAK: Streak atual: $currentStreak');
+    
     // Se já completou hoje, não altera
     if (completedDates.contains(dateString)) {
+      print('DEBUG STREAK: Já completou hoje, mantendo streak: $currentStreak');
       return this;
     }
 
@@ -252,16 +257,28 @@ class HydrationStreak {
     final yesterday = completedDate.subtract(const Duration(days: 1));
     final yesterdayString = _formatDateString(yesterday);
     
+    print('DEBUG STREAK: Verificando se ontem ($yesterdayString) foi completado');
+    
     int newCurrentStreak;
-    if (completedDates.contains(yesterdayString) || currentStreak == 0) {
+    if (currentStreak == 0) {
+      // Primeiro dia do streak
+      newCurrentStreak = 1;
+      print('DEBUG STREAK: Primeiro dia do streak, definindo para 1');
+    } else if (completedDates.contains(yesterdayString)) {
+      // Consecutivo
       newCurrentStreak = currentStreak + 1;
+      print('DEBUG STREAK: Consecutivo! Incrementando de $currentStreak para $newCurrentStreak');
     } else {
-      newCurrentStreak = 1; // Reinicia streak
+      // Quebrou o streak
+      newCurrentStreak = 1;
+      print('DEBUG STREAK: Streak quebrado! Reiniciando para 1');
     }
     
     final newLongestStreak = newCurrentStreak > longestStreak 
       ? newCurrentStreak 
       : longestStreak;
+    
+    print('DEBUG STREAK: Novo streak: $newCurrentStreak, Recorde: $newLongestStreak');
     
     return HydrationStreak(
       currentStreak: newCurrentStreak,
@@ -273,28 +290,42 @@ class HydrationStreak {
 
   /// Verifica e atualiza streak considerando dias perdidos
   HydrationStreak checkAndUpdateStreak(DateTime today) {
-    if (lastCompletedDate == null) return this;
-    
     final todayString = _formatDateString(today);
     final yesterdayString = _formatDateString(today.subtract(const Duration(days: 1)));
     
+    print('DEBUG CHECK: Verificando streak para hoje: $todayString');
+    print('DEBUG CHECK: Última data completada: $lastCompletedDate');
+    print('DEBUG CHECK: Streak atual: $currentStreak');
+    print('DEBUG CHECK: Datas completadas: $completedDates');
+    
     // Se hoje já foi completado, não faz nada
     if (completedDates.contains(todayString)) {
+      print('DEBUG CHECK: Hoje já foi completado, mantendo streak: $currentStreak');
+      return this;
+    }
+    
+    // Se nunca completou nenhum dia, mantém zerado
+    if (lastCompletedDate == null || currentStreak == 0) {
+      print('DEBUG CHECK: Nunca completou ou streak já zerado');
       return this;
     }
     
     final daysSinceLastCompleted = today.difference(lastCompletedDate!).inDays;
+    print('DEBUG CHECK: Dias desde última conclusão: $daysSinceLastCompleted');
     
     // Se passou mais de 1 dia sem completar, quebra o streak
     if (daysSinceLastCompleted > 1) {
+      print('DEBUG CHECK: Passou mais de 1 dia, quebrando streak');
       return copyWith(currentStreak: 0);
     }
     
-    // Se é o dia seguinte e ontem não foi completado, quebra o streak
+    // Se é hoje e ontem não foi completado, quebra o streak
     if (daysSinceLastCompleted == 1 && !completedDates.contains(yesterdayString)) {
+      print('DEBUG CHECK: Ontem não foi completado, quebrando streak');
       return copyWith(currentStreak: 0);
     }
     
+    print('DEBUG CHECK: Mantendo streak atual: $currentStreak');
     return this;
   }
 

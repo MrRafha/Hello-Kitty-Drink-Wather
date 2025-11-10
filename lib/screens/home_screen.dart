@@ -72,14 +72,17 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _startPeriodicStreakCheck() {
-    // Verificar o streak a cada 30 segundos para detectar mudança de dia
-    Timer.periodic(const Duration(seconds: 30), (timer) {
+    // Verificar o streak a cada 10 segundos para detectar mudança de dia
+    Timer.periodic(const Duration(seconds: 10), (timer) {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       
-      // Se o dia mudou, verificar o streak do dia anterior
+      print('DEBUG TIMER: Verificando mudança de dia - Hoje: $today, Último check: $_lastCheckedDate');
+      
+      // Se o dia mudou, verificar streak diário
       if (_lastCheckedDate != null && _lastCheckedDate!.isBefore(today)) {
-        _checkStreakForPreviousDay();
+        print('DEBUG TIMER: Dia mudou! Verificando streak...');
+        _checkStreakDaily();
       }
       
       _lastCheckedDate = today;
@@ -88,20 +91,44 @@ class _HomeScreenState extends State<HomeScreen>
     // Definir a data inicial
     final now = DateTime.now();
     _lastCheckedDate = DateTime(now.year, now.month, now.day);
+    
+    // Verificar streak ao inicializar
+    _checkStreakDaily();
   }
 
-  Future<void> _checkStreakForPreviousDay() async {
+  Future<void> _checkStreakDaily() async {
     try {
-      // Verificar se o streak foi quebrado ontem
-      await _storageService.checkStreakAtEndOfDay(_currentGlasses, _dailyGoal);
+      print('DEBUG DAILY: Verificando streak diário...');
+      
+      // Verificar e atualizar streak baseado na mudança de dia
+      await _storageService.checkAndUpdateStreakDaily();
       
       // Recarregar dados atualizados
       final updatedStreak = await _storageService.getHydrationStreak();
+      
+      print('DEBUG DAILY: Streak atualizado - Atual: ${updatedStreak.currentStreak}, Recorde: ${updatedStreak.longestStreak}');
+      
       setState(() {
         _hydrationStreak = updatedStreak;
+        // Resetar copos para novo dia se mudou de dia
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        if (_lastCheckedDate != null && _lastCheckedDate!.isBefore(today)) {
+          _currentGlasses = 0;
+          print('DEBUG DAILY: Novo dia detectado, resetando copos para 0');
+        }
       });
+      
+      // Salvar dados atualizados
+      if (_userProfile != null) {
+        final updatedProfile = _userProfile!.copyWith(
+          hydrationStreak: updatedStreak,
+        );
+        await _storageService.saveUserProfile(updatedProfile);
+      }
+      
     } catch (e) {
-      print('Erro ao verificar streak do dia anterior: $e');
+      print('Erro ao verificar streak diário: $e');
     }
   }
 
@@ -246,23 +273,59 @@ class _HomeScreenState extends State<HomeScreen>
             fontWeight: FontWeight.bold,
           ),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('🎯 Sequência atual: ${_hydrationStreak.currentStreak} dias'),
-            const SizedBox(height: 8),
-            Text('🏆 Melhor sequência: ${_hydrationStreak.longestStreak} dias'),
-            const SizedBox(height: 16),
-            Text(
-              _hydrationStreak.currentStreak == 0
-                ? 'Atinja sua meta diária para começar uma nova sequência! 💪'
-                : 'Continue bebendo água todos os dias para manter sua sequência! 🎀',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+        content: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '🎯 Sequência atual: ${_hydrationStreak.currentStreak} dias',
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '🏆 Melhor sequência: ${_hydrationStreak.longestStreak} dias',
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _hydrationStreak.currentStreak == 0
+                  ? 'Atinja sua meta diária para começar uma nova sequência! 💪'
+                  : 'Continue bebendo água todos os dias para manter sua sequência! 🎀',
+                style: const TextStyle(
+                  color: Colors.black54,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
