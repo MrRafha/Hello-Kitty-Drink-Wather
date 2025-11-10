@@ -17,12 +17,13 @@
 
 - 🎀 **Interface Hello Kitty** - Design rosa fofo e kawaii
 - 💧 **Contador de Água** - Registre seus copos de água facilmente
-- ⏰ **Lembretes Inteligentes** - Notificações personalizáveis em segundo plano
+- 🔥 **Sistema de Streak** - Acompanhe dias consecutivos atingindo a meta ⭐ **NOVO!**
+- ⏰ **Lembretes Inteligentes** - Notificações com ícone Hello Kitty personalizado
 - 📊 **Estatísticas Semanais** - Acompanhe seu progresso de hidratação
 - 🎯 **Metas Personalizadas** - Configure objetivos diários
 - 🔄 **Countdown Persistente** - Timer que continua entre navegações
 - 🔋 **Execução em Segundo Plano** - Funciona mesmo com o app fechado
-- 🌙 **Modo Noturno** - Interface adaptável para diferentes horários
+- � **Sistema de Conquistas** - Celebrações e marcos de hidratação ⭐ **NOVO!**
 
 ## 📱 Screenshots
 
@@ -36,12 +37,12 @@
 
 [![Latest Release](https://img.shields.io/github/v/release/MrRafha/Hello-Kitty-Drink-Wather?style=for-the-badge&color=pink)](https://github.com/MrRafha/Hello-Kitty-Drink-Wather/releases/latest)
 
-**Baixe a versão v1.1.0 para Android:**
+**Baixe a versão v1.2.0 para Android:**
 
 | Versão | Tamanho | Compatibilidade | Download |
 |--------|---------|-----------------|----------|
-| **ARM64** ⭐ | 20.8 MB | Android 2018+ | [📱 Baixar](https://github.com/MrRafha/Hello-Kitty-Drink-Wather/releases/download/v1.1.0/HelloKitty_WaterReminder_v1.1.0_ARM64.apk) |
-| **Universal** | 51.8 MB | Android 5.0+ | [📱 Baixar](https://github.com/MrRafha/Hello-Kitty-Drink-Wather/releases/download/v1.1.0/HelloKitty_WaterReminder_v1.1.0_release.apk) |
+| **ARM64** ⭐ | ~21 MB | Android 2018+ | [📱 Baixar](https://github.com/MrRafha/Hello-Kitty-Drink-Wather/releases/download/v1.2.0/HelloKitty_WaterReminder_v1.2.0_ARM64.apk) |
+| **Universal** | ~52 MB | Android 5.0+ | [📱 Baixar](https://github.com/MrRafha/Hello-Kitty-Drink-Wather/releases/download/v1.2.0/HelloKitty_WaterReminder_v1.2.0_release.apk) |
 
 *💡 Recomendamos a versão ARM64 para dispositivos modernos (menor tamanho, melhor performance)*
 
