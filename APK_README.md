@@ -1,4 +1,4 @@
-# 📱 APKs - Hello Kitty Water Reminder v1.2.1
+# 📱 APKs - Hello Kitty Water Reminder v1.3.0
 
 ## 🚀 Download
 
@@ -6,25 +6,27 @@ Os APKs estão disponíveis localmente neste diretório:
 
 ### 🔧 Versão Debug (141.9 MB)
 ```
-HelloKitty_WaterReminder_v1.2.1_debug.apk
+HelloKitty_WaterReminder_v1.3.0_debug.apk
 ```
 - ✅ Para desenvolvimento e testes
-- ✅ Inclui informações de debug
-- ✅ Todas as correções aplicadas
+- ✅ Inclui logs detalhados de diagnóstico
+- ✅ Sistema de streak aprimorado
 
 ### 🎯 Versão Release (53.1 MB) 
 ```
-HelloKitty_WaterReminder_v1.2.1_release.apk
+HelloKitty_WaterReminder_v1.3.0_release.apk
 ```
-- ✅ Otimizada para produção  
+- ✅ Otimizada para produção (Tree-shaking 99.6%)
 - ✅ Tamanho compactado
-- ✅ Pronta para distribuição
+- ✅ Performance máxima
 
-## 🐛 Correções Aplicadas
+## � Principais Melhorias v1.3.0
 
-- **Streak Widget**: Corrigido problema de não exibição do contador de dias consecutivos
-- **Notificações**: Implementado ícone Hello Kitty substituindo ícone do Flutter
-- **Ícones**: Adicionados `hello_kitty_notification.png` em todas as resoluções
+- **Sistema de Streak**: Detecção automática de meia-noite e reset diário
+- **Timer Inteligente**: Verifica mudança de dia a cada 10 segundos
+- **Lógica Robusta**: Consecutividade correta e quebra inteligente
+- **Notificações Hello Kitty**: Ícone personalizado da Hello Kitty
+- **Logs Detalhados**: Diagnóstico completo do sistema
 
 ## 📋 Como Instalar
 
